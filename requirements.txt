@@ -1,0 +1,8 @@
+streamlit
+pillow
+pymupdf
+numpy
+faiss-cpu
+sentence-transformers
+torch
+transformers
