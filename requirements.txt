@@ -1,8 +1,7 @@
 streamlit
-pillow
-pymupdf
-numpy
-faiss-cpu
+groq
+pypdf
+python-dotenv
 sentence-transformers
-torch
-transformers
+faiss-cpu
+numpy
