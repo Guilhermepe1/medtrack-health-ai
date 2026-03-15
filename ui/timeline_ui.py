@@ -18,7 +18,9 @@ def render_timeline():
 
     st.subheader("Timeline de Saúde")
 
-    timeline = montar_timeline_exames()
+    usuario_id = st.session_state["usuario_id"]
+
+    timeline = montar_timeline_exames(usuario_id)
 
     for categoria in timeline:
 

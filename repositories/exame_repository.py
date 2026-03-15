@@ -39,7 +39,7 @@ def listar_exames(usuario_id):
     ORDER BY data_upload DESC
     """
 
-    cursor.execute(query)
+    cursor.execute(query, (usuario_id,))
 
     rows = cursor.fetchall()
 
@@ -216,7 +216,7 @@ def buscar_exame_por_nome(nome):
 
     return exame
 
-def montar_timeline_exames():
+def montar_timeline_exames(usuario_id):
     """
     Organiza os exames por categoria e ano.
     Estrutura retornada:
@@ -231,7 +231,7 @@ def montar_timeline_exames():
     }
     """
 
-    exames = listar_exames()
+    exames = listar_exames(usuario_id)
 
     timeline = {}
 
