@@ -10,7 +10,7 @@ from models.exame import Exame
 UPLOAD_FOLDER = "uploads"
 
 
-def salvar_exame(arquivo, texto, resumo, categoria):
+def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     """
     Salva um novo exame no banco de dados.
     """
@@ -19,22 +19,23 @@ def salvar_exame(arquivo, texto, resumo, categoria):
 
     cursor.execute(
         """
-        INSERT INTO exames (arquivo, texto, resumo, categoria)
+        INSERT INTO exames (usuario_id, arquivo, texto, resumo, categoria)
         VALUES (?, ?, ?, ?)
         """,
-        (arquivo, texto, resumo, categoria)
+        (usuario_id, arquivo, texto, resumo, categoria)
     )
 
     conn.commit()
 
 
-def listar_exames():
+def listar_exames(usuario_id):
 
     cursor = conn.cursor()
 
     query = """
     SELECT id, arquivo, resumo, data_upload, categoria
     FROM exames
+    WHERE usuario_id = ?
     ORDER BY data_upload DESC
     """
 

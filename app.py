@@ -8,9 +8,22 @@ import streamlit as st
 from ui.upload_ui import render_upload
 from ui.timeline_ui import render_timeline
 from ui.chat_ui import render_chat
+from auth.login_ui import render_login
 
 
 def main():
+
+    if "logado" not in st.session_state:
+
+        render_login()
+        return
+
+    st.sidebar.write(f"Usuário: {st.session_state['usuario_nome']}")
+
+    if st.sidebar.button("Logout"):
+
+        st.session_state.clear()
+        st.rerun()
 
     st.set_page_config(
         page_title="Minha Saúde AI",

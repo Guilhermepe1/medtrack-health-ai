@@ -15,7 +15,7 @@ from services.exame_classifier import classificar_exame
 UPLOAD_FOLDER = "uploads"
 
 
-def processar_exame(arquivo):
+def processar_exame(arquivo, usuario_id):
     """
     Fluxo completo de processamento de um exame:
 
@@ -39,7 +39,7 @@ def processar_exame(arquivo):
 
     categoria = classificar_exame(texto)
 
-    salvar_exame(arquivo.name, texto, resumo, categoria)
+    salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria)
     
     exame = buscar_exame_por_nome(arquivo.name)
 

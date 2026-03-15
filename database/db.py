@@ -27,6 +27,7 @@ def init_db():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS exames (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        usuario_id INTEGER,
         arquivo TEXT,
         texto TEXT,
         resumo TEXT,
@@ -34,6 +35,16 @@ def init_db():
         data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        username TEXT UNIQUE,
+        senha TEXT
+    )
+    """)
+
 
     try:
         cursor.execute("ALTER TABLE exames ADD COLUMN categoria TEXT")
