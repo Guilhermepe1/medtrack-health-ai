@@ -5,11 +5,8 @@ python-dotenv
 sentence-transformers
 faiss-cpu
 numpy
-<<<<<<< HEAD
-=======
 PyMuPDF
 pytesseract
 Pillow
 streamlit-authenticator
 bcrypt
->>>>>>> f8c93fa75f348b6b356b82aab3a5b029efe4db18
