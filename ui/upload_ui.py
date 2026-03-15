@@ -13,6 +13,8 @@ def render_upload():
 
     st.subheader("Upload de Exame")
 
+    usuario_id = st.session_state["usuario_id"]
+
     arquivo = st.file_uploader(
         "Enviar exame",
         type=["png", "jpg", "jpeg", "pdf"]
@@ -20,7 +22,7 @@ def render_upload():
 
     if arquivo:
 
-        caminho, texto, resumo, categoria = processar_exame(arquivo)
+        caminho, texto, resumo, categoria = processar_exame(arquivo, usuario_id)
 
         st.success(f"Tipo de exame detectado: {categoria}")
 
