@@ -8,3 +8,5 @@ numpy
 PyMuPDF
 pytesseract
 Pillow
+streamlit-authenticator
+bcrypt
