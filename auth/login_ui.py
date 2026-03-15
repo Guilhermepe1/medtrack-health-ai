@@ -1,8 +1,18 @@
 import streamlit as st
 from auth.auth_service import login
+from auth.register_ui import render_registro
 
 
 def render_login():
+
+    opcao = st.radio(
+        "Escolha uma opção",
+        ["Login", "Registrar"]
+    )
+
+    if opcao == "Registrar":
+        render_registro()
+        return
 
     st.title("Login")
 

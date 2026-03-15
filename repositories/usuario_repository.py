@@ -14,13 +14,13 @@ def buscar_usuario_por_username(username):
     return cursor.fetchone()
 
 
-def criar_usuario(nome, username, senha):
+def criar_usuario(nome, username, senha_hash):
 
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO usuarios (nome, username, senha)
         VALUES (?, ?, ?)
-    """, (nome, username, senha))
+    """, (nome, username, senha_hash))
 
     conn.commit()
