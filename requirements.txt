@@ -1,22 +1,4 @@
-<<<<<<< HEAD
 streamlit
-pillow
-pymupdf
-numpy
-faiss-cpu
-sentence-transformers
-torch
-transformers
 groq
 pypdf
 python-dotenv
-=======
-streamlit
-pillow
-pymupdf
-numpy
-faiss-cpu
-sentence-transformers
-torch
-transformers
->>>>>>> fe99436fb4eb0108552db1caaff1edadf8bc7f27
