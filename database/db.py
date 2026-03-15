@@ -36,6 +36,15 @@ def init_db():
     )
     """)
 
+    # garantir que a coluna usuario_id exista (migração automática)
+
+    cursor.execute("PRAGMA table_info(exames)")
+    colunas = [coluna[1] for coluna in cursor.fetchall()]
+
+    if "usuario_id" not in colunas:
+        cursor.execute("ALTER TABLE exames ADD COLUMN usuario_id INTEGER")
+
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
