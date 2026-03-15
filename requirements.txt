@@ -2,3 +2,6 @@ streamlit
 groq
 pypdf
 python-dotenv
+sentence-transformers
+faiss-cpu
+numpy
