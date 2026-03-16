@@ -28,12 +28,10 @@ def login(username, senha):
     if usuario is None:
         return False
 
-    senha_hash = usuario[3]
+    if bcrypt.checkpw(senha.encode(), usuario["senha"].encode()):
 
-    if bcrypt.checkpw(senha.encode(), senha_hash.encode()):
-
-        st.session_state["usuario_id"] = usuario[0]
-        st.session_state["usuario_nome"] = usuario[1]
+        st.session_state["usuario_id"] = usuario["id"]
+        st.session_state["usuario_nome"] = usuario["nome"]
         st.session_state["logado"] = True
 
         return True
