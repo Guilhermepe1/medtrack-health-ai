@@ -9,4 +9,5 @@ database/
 uploads/
 rag/*.index
 *reindexar_exames.py
+*reprocessar_alertas.py
 
