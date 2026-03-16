@@ -66,7 +66,7 @@ def buscar_evolucao_parametro(usuario_id, parametro):
     cursor = get_cursor(conn)
 
     cursor.execute("""
-        SELECT data_coleta, valor, referencia_min, referencia_max, status
+        SELECT data_coleta, valor, unidade, referencia_min, referencia_max, status
         FROM exame_valores
         WHERE usuario_id = %s AND parametro ILIKE %s
         ORDER BY data_coleta ASC
