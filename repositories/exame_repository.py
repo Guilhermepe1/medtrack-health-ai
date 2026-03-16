@@ -20,7 +20,7 @@ def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     cursor.execute(
         """
         INSERT INTO exames (usuario_id, arquivo, texto, resumo, categoria)
-        VALUES (?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?)
         """,
         (usuario_id, arquivo, texto, resumo, categoria)
     )
@@ -83,7 +83,6 @@ def buscar_exame_por_id(exame_id):
         categoria=row[5]
     )
 
-    # adiciona texto dinamicamente para uso interno
     exame.texto = row[2]
 
     return exame
@@ -124,13 +123,13 @@ def excluir_exame(exame_id):
     return True
 
 
-def montar_historico_exames():
+def montar_historico_exames(usuario_id):
     """
     Monta o histórico de exames em formato de texto
     para ser utilizado pelo chat de IA.
     """
 
-    exames = listar_exames()
+    exames = listar_exames(usuario_id)
 
     historico = ""
 
@@ -149,9 +148,9 @@ Resumo:
     return historico
 
 
-def buscar_exames_relevantes(pergunta):
+def buscar_exames_relevantes(usuario_id, pergunta):
     """
-    Busca exames cujo texto ou resumo contenham palavras da pergunta.
+    Busca exames relevantes apenas do usuário.
     """
 
     cursor = conn.cursor()
@@ -159,7 +158,8 @@ def buscar_exames_relevantes(pergunta):
     cursor.execute("""
         SELECT id, arquivo, texto, resumo, data_upload, categoria
         FROM exames
-    """)
+        WHERE usuario_id = ?
+    """, (usuario_id,))
 
     rows = cursor.fetchall()
 
@@ -189,15 +189,15 @@ def buscar_exames_relevantes(pergunta):
     return relevantes
 
 
-def buscar_exame_por_nome(nome):
+def buscar_exame_por_nome(usuario_id, nome):
 
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT id, arquivo, texto, resumo, data_upload, categoria
         FROM exames
-        WHERE arquivo = ?
-    """, (nome,))
+        WHERE usuario_id = ? AND arquivo = ?
+    """, (usuario_id, nome))
 
     row = cursor.fetchone()
 
@@ -216,19 +216,10 @@ def buscar_exame_por_nome(nome):
 
     return exame
 
+
 def montar_timeline_exames(usuario_id):
     """
     Organiza os exames por categoria e ano.
-    Estrutura retornada:
-
-    {
-        "Hemograma": {
-            "2026": [exame, exame]
-        },
-        "Colesterol": {
-            "2025": [exame]
-        }
-    }
     """
 
     exames = listar_exames(usuario_id)
