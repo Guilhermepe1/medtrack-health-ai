@@ -10,3 +10,4 @@ pytesseract
 Pillow
 streamlit-authenticator
 bcrypt
+sentence-transformers
