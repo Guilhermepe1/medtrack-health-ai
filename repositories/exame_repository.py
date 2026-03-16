@@ -4,7 +4,7 @@ relacionadas à entidade Exame.
 """
 
 import os
-from database.db import get_connection
+from database.db import get_connection, get_cursor
 from models.exame import Exame
 
 UPLOAD_FOLDER = "uploads"
@@ -16,12 +16,12 @@ def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     """
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     cursor.execute(
         """
         INSERT INTO exames (usuario_id, arquivo, texto, resumo, categoria)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
         """,
         (usuario_id, arquivo, texto, resumo, categoria)
     )
@@ -30,39 +30,33 @@ def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     conn.close()
 
 
-
 def listar_exames(usuario_id):
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     query = """
     SELECT id, arquivo, resumo, data_upload, categoria
     FROM exames
-    WHERE usuario_id = ?
+    WHERE usuario_id = %s
     ORDER BY data_upload DESC
     """
 
     cursor.execute(query, (usuario_id,))
-
     rows = cursor.fetchall()
+    conn.close()
 
     exames = []
 
     for row in rows:
-
         exame = Exame(
-            id=row[0],
-            arquivo=row[1],
-            resumo=row[2],
-            data_upload=row[3],
-            categoria=row[4]
+            id=row["id"],
+            arquivo=row["arquivo"],
+            resumo=row["resumo"],
+            data_upload=str(row["data_upload"]),
+            categoria=row["categoria"]
         )
-
         exames.append(exame)
-
-    conn.commit()
-    conn.close()
 
     return exames
 
@@ -70,28 +64,28 @@ def listar_exames(usuario_id):
 def buscar_exame_por_id(exame_id):
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     cursor.execute("""
         SELECT id, arquivo, texto, resumo, data_upload, categoria
         FROM exames
-        WHERE id = ?
+        WHERE id = %s
     """, (exame_id,))
 
     row = cursor.fetchone()
+    conn.close()
 
     if row is None:
         return None
 
     exame = Exame(
-        id=row[0],
-        arquivo=row[1],
-        resumo=row[3],
-        data_upload=row[4],
-        categoria=row[5]
+        id=row["id"],
+        arquivo=row["arquivo"],
+        resumo=row["resumo"],
+        data_upload=str(row["data_upload"]),
+        categoria=row["categoria"]
     )
-
-    exame.texto = row[2]
+    exame.texto = row["texto"]
 
     return exame
 
@@ -102,24 +96,25 @@ def excluir_exame(exame_id):
     """
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     cursor.execute("""
         SELECT arquivo
         FROM exames
-        WHERE id = ?
+        WHERE id = %s
     """, (exame_id,))
 
     resultado = cursor.fetchone()
 
     if resultado is None:
+        conn.close()
         return False
 
-    nome_arquivo = resultado[0]
+    nome_arquivo = resultado["arquivo"]
 
     cursor.execute("""
         DELETE FROM exames
-        WHERE id = ?
+        WHERE id = %s
     """, (exame_id,))
 
     conn.commit()
@@ -144,7 +139,6 @@ def montar_historico_exames(usuario_id):
     historico = ""
 
     for exame in exames:
-
         historico += f"""
 Categoria: {exame.categoria}
 Arquivo: {exame.arquivo}
@@ -164,41 +158,34 @@ def buscar_exames_relevantes(usuario_id, pergunta):
     """
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     cursor.execute("""
         SELECT id, arquivo, texto, resumo, data_upload, categoria
         FROM exames
-        WHERE usuario_id = ?
+        WHERE usuario_id = %s
     """, (usuario_id,))
 
     rows = cursor.fetchall()
+    conn.close()
 
     pergunta = pergunta.lower()
-
     relevantes = []
 
     for row in rows:
-
-        texto = (row[2] or "").lower()
-        resumo = (row[3] or "").lower()
+        texto = (row["texto"] or "").lower()
+        resumo = (row["resumo"] or "").lower()
 
         if any(palavra in texto or palavra in resumo for palavra in pergunta.split()):
-
             exame = Exame(
-                id=row[0],
-                arquivo=row[1],
-                resumo=row[3],
-                data_upload=row[4],
-                categoria=row[5]
+                id=row["id"],
+                arquivo=row["arquivo"],
+                resumo=row["resumo"],
+                data_upload=str(row["data_upload"]),
+                categoria=row["categoria"]
             )
-
-            exame.texto = row[2]
-
+            exame.texto = row["texto"]
             relevantes.append(exame)
-
-    conn.commit()
-    conn.close()
 
     return relevantes
 
@@ -206,31 +193,28 @@ def buscar_exames_relevantes(usuario_id, pergunta):
 def buscar_exame_por_nome(usuario_id, nome):
 
     conn = get_connection()
-    cursor = conn.cursor()
+    cursor = get_cursor(conn)
 
     cursor.execute("""
         SELECT id, arquivo, texto, resumo, data_upload, categoria
         FROM exames
-        WHERE usuario_id = ? AND arquivo = ?
+        WHERE usuario_id = %s AND arquivo = %s
     """, (usuario_id, nome))
 
     row = cursor.fetchone()
+    conn.close()
 
     if row is None:
         return None
 
     exame = Exame(
-        id=row[0],
-        arquivo=row[1],
-        resumo=row[3],
-        data_upload=row[4],
-        categoria=row[5]
+        id=row["id"],
+        arquivo=row["arquivo"],
+        resumo=row["resumo"],
+        data_upload=str(row["data_upload"]),
+        categoria=row["categoria"]
     )
-
-    exame.texto = row[2]
-    
-    conn.commit()
-    conn.close()
+    exame.texto = row["texto"]
 
     return exame
 
@@ -245,7 +229,6 @@ def montar_timeline_exames(usuario_id):
     timeline = {}
 
     for exame in exames:
-
         categoria = exame.categoria or "Outros"
         ano = exame.data_upload[:4]
 
