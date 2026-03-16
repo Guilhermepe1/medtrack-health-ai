@@ -6,23 +6,23 @@ import streamlit as st
 
 from repositories.exame_repository import montar_timeline_exames, excluir_exame
 
-tipos = ["Todos", "Hemograma", "Colesterol", "Diabetes", "Imagem", "Outros"]
-
-filtro = st.selectbox(
-    "Filtrar tipo de exame",
-    tipos
-)
-
 
 def render_timeline():
 
     st.subheader("Timeline de Saúde")
+
+    tipos = ["Todos", "Hemograma", "Colesterol", "Diabetes", "Imagem", "Outros"]
+
+    filtro = st.selectbox("Filtrar tipo de exame", tipos)
 
     usuario_id = st.session_state["usuario_id"]
 
     timeline = montar_timeline_exames(usuario_id)
 
     for categoria in timeline:
+
+        if filtro != "Todos" and categoria != filtro:
+            continue
 
         st.header(f"🧬 {categoria}")
 
