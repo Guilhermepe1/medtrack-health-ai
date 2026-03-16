@@ -5,7 +5,7 @@ from services.embedding_service import gerar_embedding
 
 def adicionar_exame(usuario_id, exame_id, texto):
     embedding = gerar_embedding(texto)
-    vetor = embedding.tolist()
+    vetor = np.array(embedding, dtype="float32").tolist()
 
     conn = get_connection()
     cursor = get_cursor(conn)
@@ -21,7 +21,7 @@ def adicionar_exame(usuario_id, exame_id, texto):
 
 def buscar_exames_semelhantes(usuario_id, pergunta, k=3):
     embedding = gerar_embedding(pergunta)
-    vetor = embedding.tolist()
+    vetor = np.array(embedding, dtype="float32").tolist()
 
     conn = get_connection()
     cursor = get_cursor(conn)
