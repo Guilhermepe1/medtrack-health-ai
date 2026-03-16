@@ -5,7 +5,7 @@ Service responsável pelo fluxo de processamento de exames.
 import streamlit as st
 
 from services.ai_service import resumir_exame
-from services.extracao_service import extrair_valores
+from services.extracao_service import extrair_metadados_e_valores
 from services.storage_service import upload_arquivo
 from repositories.exame_repository import salvar_exame, buscar_exame_por_nome
 from repositories.valores_repository import salvar_valores
@@ -15,41 +15,58 @@ from services.document_reader import extrair_texto_documento
 from services.exame_classifier import classificar_exame
 
 
-def processar_exame(arquivo, usuario_id):
+def processar_exame(arquivo, usuario_id,
+                    nome_exame=None, data_exame=None,
+                    medico=None, hospital=None,
+                    conteudo=None, texto=None):
     """
-    Fluxo completo de processamento de um exame:
+    Fluxo completo de processamento de um exame.
 
-    1. Lê conteúdo do arquivo
-    2. Extrai texto (OCR)
-    3. Gera resumo com IA
-    4. Classifica categoria
-    5. Faz upload para Supabase Storage
-    6. Salva metadados no banco
-    7. Extrai valores estruturados
-    8. Gera alertas clínicos para valores fora da referência
-    9. Indexa embedding no pgvector
+    Aceita metadados já confirmados pelo usuário (nome_exame, data_exame,
+    medico, hospital) e conteúdo/texto pré-extraídos para evitar
+    releitura desnecessária do arquivo.
     """
 
-    conteudo = arquivo.read()
+    # lê conteúdo se não foi passado
+    if conteudo is None:
+        conteudo = arquivo.read()
+        arquivo.seek(0)
 
-    texto = extrair_texto_documento(arquivo)
-    resumo = resumir_exame(texto)
+    # extrai texto se não foi passado
+    if texto is None:
+        texto = extrair_texto_documento(arquivo)
+
+    resumo    = resumir_exame(texto)
     categoria = classificar_exame(texto)
 
+    # upload para Supabase Storage
     storage_path = upload_arquivo(usuario_id, arquivo.name, conteudo)
 
     if not storage_path:
         st.error("Erro ao salvar arquivo no storage. Tente novamente.")
         return None, texto, resumo, categoria
 
-    salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria, storage_path)
+    # salva metadados no banco
+    salvar_exame(
+        usuario_id=usuario_id,
+        arquivo=arquivo.name,
+        texto=texto,
+        resumo=resumo,
+        categoria=categoria,
+        storage_path=storage_path,
+        nome_exame=nome_exame,
+        data_exame=data_exame,
+        medico=medico,
+        hospital=hospital
+    )
 
     exame = buscar_exame_por_nome(usuario_id, arquivo.name)
 
     if exame:
-        resultado = extrair_valores(texto)
-        valores = resultado.get("valores", [])
-        data_coleta = resultado.get("data_coleta")
+        # usa data_exame confirmada pelo usuário como data de coleta
+        resultado  = extrair_metadados_e_valores(texto)
+        valores    = resultado.get("valores", [])
+        data_coleta = data_exame or resultado.get("data_exame")
 
         salvar_valores(
             exame_id=exame.id,
