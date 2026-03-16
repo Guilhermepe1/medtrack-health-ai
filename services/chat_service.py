@@ -2,15 +2,20 @@
 Service responsável pelo chat de saúde baseado no histórico de exames.
 """
 
+import streamlit as st
+
 from services.ai_service import client
-from repositories.exame_repository import buscar_exames_relevantes
-from rag.vector_store import buscar_exames
+from rag.vector_store import buscar_exames_semelhantes
 from repositories.exame_repository import buscar_exame_por_id
 
 
 def perguntar_saude(pergunta):
 
-    ids_relevantes = buscar_exames(pergunta, k=3)
+    # pegar usuário logado
+    usuario_id = st.session_state["usuario_id"]
+
+    # buscar exames semanticamente relevantes no RAG
+    ids_relevantes = buscar_exames_semelhantes(usuario_id, pergunta, k=3)
 
     exames = []
 
@@ -21,25 +26,17 @@ def perguntar_saude(pergunta):
         if exame:
             exames.append(exame)
 
-    contexto = ""
-
-    for exame in exames:
-
-        contexto += f"""
-Arquivo: {exame.arquivo}
-Data: {exame.data_upload}
-
-Resumo:
-{exame.resumo}
-
-"""
+    contexto = montar_contexto_exames(exames)
 
     resposta = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {
                 "role": "system",
-                "content": "Você é um assistente médico."
+                "content": """
+Você é um assistente médico que ajuda o paciente a entender seus exames.
+Explique os resultados de forma clara, mas sem substituir um médico.
+"""
             },
             {
                 "role": "user",
@@ -48,7 +45,7 @@ Exames relevantes do paciente:
 
 {contexto}
 
-Pergunta:
+Pergunta do paciente:
 {pergunta}
 """
             }
