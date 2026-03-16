@@ -4,8 +4,12 @@ import streamlit as st
 
 def get_connection():
 
-    conn = psycopg2.connect(
-        st.secrets["DATABASE_URL"]
-    )
+    try:
+        conn = psycopg2.connect(
+            st.secrets["DATABASE_URL"]
+        )
+        return conn
 
-    return conn
+    except Exception as e:
+        st.error(f"Erro ao conectar no banco: {e}")
+        raise e
