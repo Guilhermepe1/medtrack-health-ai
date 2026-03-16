@@ -1,8 +1,7 @@
 """
-Conexão com banco PostgreSQL (Supabase)
+Conexão com PostgreSQL (Supabase)
 """
 
-import os
 import psycopg2
 import streamlit as st
 
