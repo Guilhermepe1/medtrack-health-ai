@@ -1,9 +1,18 @@
 """
 Tema visual do MedTrack Health AI.
-Minimalista, claro, verde-saúde.
+Paleta baseada na logo: teal #00C9A7, azul #2B7FD4, marinho #1A2A6C.
 """
 
+import base64
 import streamlit as st
+
+
+def _logo_base64():
+    try:
+        with open("logo-medtrack.png", "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return None
 
 
 def aplicar_tema():
@@ -18,7 +27,7 @@ def aplicar_tema():
 
     /* ── Fundo e layout geral ── */
     .stApp {
-        background-color: #F7F9F8;
+        background-color: #F4F8FC;
     }
 
     .block-container {
@@ -28,220 +37,187 @@ def aplicar_tema():
 
     /* ── Sidebar ── */
     [data-testid="stSidebar"] {
-        background-color: #FFFFFF;
-        border-right: 1px solid #E8EDEA;
-        padding-top: 1.5rem;
+        background: linear-gradient(180deg, #1A2A6C 0%, #1D3A8A 60%, #1A4A7A 100%);
+        border-right: none;
+        padding-top: 0;
     }
 
     [data-testid="stSidebar"] .block-container {
-        padding: 1rem 1.2rem !important;
+        padding: 0 !important;
     }
 
-    /* Logo na sidebar */
-    .sidebar-logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 0.5rem 0.2rem 1.5rem 0.2rem;
-        border-bottom: 1px solid #E8EDEA;
-        margin-bottom: 1.2rem;
+    /* ── Logo na sidebar ── */
+    .sidebar-logo-wrap {
+        padding: 1.6rem 1.2rem 1.2rem 1.2rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 1rem;
+        text-align: center;
     }
 
-    .sidebar-logo-icon {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #2D9B6F, #1E7A54);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-    }
-
-    .sidebar-logo-text {
-        font-family: 'DM Serif Display', serif;
-        font-size: 16px;
-        color: #1A2E25;
-        line-height: 1.2;
+    .sidebar-logo-wrap img {
+        width: 120px;
+        margin-bottom: 4px;
     }
 
     .sidebar-logo-sub {
         font-size: 11px;
-        color: #6B8C7D;
-        font-weight: 400;
+        color: rgba(255,255,255,0.5);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
     }
 
-    /* Avatar do usuário na sidebar */
+    /* ── Avatar do usuário ── */
     .sidebar-user {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 0.8rem;
-        background: #F0F7F4;
+        padding: 0.7rem 1rem;
+        background: rgba(255,255,255,0.08);
         border-radius: 12px;
-        margin-bottom: 1.5rem;
+        margin: 0 1rem 1.2rem 1rem;
     }
 
     .sidebar-avatar {
         width: 36px;
         height: 36px;
-        background: linear-gradient(135deg, #2D9B6F, #1E7A54);
+        background: linear-gradient(135deg, #00C9A7, #2B7FD4);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
         font-weight: 600;
-        font-size: 14px;
+        font-size: 15px;
         flex-shrink: 0;
     }
 
     .sidebar-username {
         font-size: 13px;
         font-weight: 500;
-        color: #1A2E25;
+        color: #FFFFFF;
     }
 
     .sidebar-tag {
         font-size: 11px;
-        color: #6B8C7D;
+        color: rgba(255,255,255,0.5);
     }
 
-    /* Itens de navegação */
-    .nav-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 0.65rem 0.8rem;
-        border-radius: 10px;
-        margin-bottom: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 400;
-        color: #4A6B5C;
-        transition: all 0.15s ease;
-        text-decoration: none;
+    /* ── Label do menu ── */
+    .nav-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.4);
+        padding: 0 1.2rem;
+        margin-bottom: 6px;
     }
 
-    .nav-item:hover {
-        background: #F0F7F4;
-        color: #1A2E25;
+    /* ── Botões da sidebar ── */
+    [data-testid="stSidebar"] .stButton > button {
+        background: transparent !important;
+        color: rgba(255,255,255,0.75) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        text-align: left !important;
+        font-size: 14px !important;
+        font-weight: 400 !important;
+        padding: 0.6rem 1rem !important;
+        width: 100% !important;
+        transition: all 0.15s ease !important;
+        box-shadow: none !important;
     }
 
-    .nav-item.active {
-        background: #E8F5EF;
-        color: #1E7A54;
-        font-weight: 500;
+    [data-testid="stSidebar"] .stButton > button:hover {
+        background: rgba(255,255,255,0.1) !important;
+        color: #FFFFFF !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 
-    .nav-icon {
-        font-size: 16px;
-        width: 20px;
-        text-align: center;
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, rgba(0,201,167,0.25), rgba(43,127,212,0.25)) !important;
+        color: #FFFFFF !important;
+        border-left: 3px solid #00C9A7 !important;
+        font-weight: 500 !important;
     }
 
     /* ── Títulos ── */
     h1 {
         font-family: 'DM Serif Display', serif !important;
-        color: #1A2E25 !important;
+        color: #1A2A6C !important;
         font-size: 28px !important;
         font-weight: 400 !important;
         margin-bottom: 0.2rem !important;
     }
 
     h2 {
-        font-family: 'DM Sans', sans-serif !important;
-        color: #1A2E25 !important;
+        color: #1A2A6C !important;
         font-size: 20px !important;
         font-weight: 600 !important;
     }
 
     h3 {
-        color: #2D5A45 !important;
+        color: #1D3A8A !important;
         font-size: 16px !important;
         font-weight: 500 !important;
     }
 
-    /* ── Cards de métricas ── */
+    /* ── Cards ── */
     .metric-card {
         background: #FFFFFF;
-        border: 1px solid #E8EDEA;
+        border: 1px solid #E0EAF5;
         border-radius: 16px;
         padding: 1.2rem 1.4rem;
         transition: box-shadow 0.2s ease;
     }
 
     .metric-card:hover {
-        box-shadow: 0 4px 16px rgba(45, 155, 111, 0.08);
+        box-shadow: 0 4px 20px rgba(43, 127, 212, 0.10);
     }
 
     .metric-label {
-        font-size: 12px;
-        font-weight: 500;
-        color: #6B8C7D;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6B8CB0;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
         margin-bottom: 6px;
     }
 
     .metric-value {
         font-size: 28px;
         font-weight: 600;
-        color: #1A2E25;
+        color: #1A2A6C;
         line-height: 1;
     }
 
     .metric-sub {
         font-size: 12px;
-        color: #6B8C7D;
+        color: #6B8CB0;
         margin-top: 4px;
     }
 
-    .metric-icon {
-        font-size: 20px;
-        margin-bottom: 8px;
+    .metric-icon { font-size: 20px; margin-bottom: 8px; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 1.5rem; }
+
+    .page-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 26px;
+        color: #1A2A6C;
+        margin: 0;
+        line-height: 1.2;
     }
 
-    /* ── Cards de exames ── */
-    .exame-card {
-        background: #FFFFFF;
-        border: 1px solid #E8EDEA;
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        margin-bottom: 10px;
-        transition: all 0.15s ease;
-    }
-
-    .exame-card:hover {
-        border-color: #A8D5BE;
-        box-shadow: 0 2px 12px rgba(45, 155, 111, 0.06);
-    }
-
-    .exame-card-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 6px;
-    }
-
-    .exame-titulo {
-        font-size: 14px;
-        font-weight: 500;
-        color: #1A2E25;
-    }
-
-    .exame-data {
-        font-size: 12px;
-        color: #6B8C7D;
-    }
-
-    .exame-resumo {
+    .page-subtitle {
         font-size: 13px;
-        color: #4A6B5C;
-        line-height: 1.5;
+        color: #6B8CB0;
+        margin-top: 4px;
     }
 
-    /* Badges de categoria */
+    /* ── Badges ── */
     .badge {
         display: inline-block;
         padding: 3px 10px;
@@ -250,10 +226,10 @@ def aplicar_tema():
         font-weight: 500;
     }
 
-    .badge-verde  { background: #E8F5EF; color: #1E7A54; }
-    .badge-azul   { background: #EBF4FF; color: #1A5FAB; }
-    .badge-laranja{ background: #FFF3E8; color: #B85C00; }
-    .badge-cinza  { background: #F0F2F1; color: #4A6B5C; }
+    .badge-teal   { background: #E0FAF6; color: #00897B; }
+    .badge-azul   { background: #E3EFFC; color: #1A5FAB; }
+    .badge-marinho{ background: #E8EBF8; color: #1A2A6C; }
+    .badge-cinza  { background: #F0F2F5; color: #4A6080; }
 
     /* ── Alertas clínicos ── */
     .alerta-card {
@@ -262,33 +238,21 @@ def aplicar_tema():
         border-radius: 0 12px 12px 0;
         padding: 0.9rem 1.2rem;
         margin-bottom: 8px;
-        border-top: 1px solid #F5E0E0;
-        border-right: 1px solid #F5E0E0;
-        border-bottom: 1px solid #F5E0E0;
+        border-top: 1px solid #FAE8E8;
+        border-right: 1px solid #FAE8E8;
+        border-bottom: 1px solid #FAE8E8;
     }
 
     .alerta-card.baixo {
-        border-left-color: #3B82F6;
-        border-top-color: #E0EAFF;
-        border-right-color: #E0EAFF;
-        border-bottom-color: #E0EAFF;
+        border-left-color: #2B7FD4;
+        border-top-color: #E3EFFC;
+        border-right-color: #E3EFFC;
+        border-bottom-color: #E3EFFC;
     }
 
-    .alerta-parametro {
-        font-size: 14px;
-        font-weight: 500;
-        color: #1A2E25;
-    }
-
-    .alerta-valor {
-        font-size: 13px;
-        color: #4A6B5C;
-        margin-top: 2px;
-    }
-
-    /* ── Botões ── */
+    /* ── Botões principais ── */
     .stButton > button {
-        background-color: #2D9B6F !important;
+        background: linear-gradient(135deg, #00C9A7, #2B7FD4) !important;
         color: white !important;
         border: none !important;
         border-radius: 10px !important;
@@ -296,118 +260,85 @@ def aplicar_tema():
         font-family: 'DM Sans', sans-serif !important;
         font-weight: 500 !important;
         font-size: 14px !important;
-        transition: all 0.15s ease !important;
+        transition: all 0.2s ease !important;
     }
 
     .stButton > button:hover {
-        background-color: #1E7A54 !important;
-        box-shadow: 0 4px 12px rgba(45, 155, 111, 0.25) !important;
+        opacity: 0.9 !important;
+        box-shadow: 0 4px 16px rgba(43, 127, 212, 0.3) !important;
         transform: translateY(-1px) !important;
     }
 
     .stButton > button[kind="secondary"] {
-        background-color: transparent !important;
-        color: #2D9B6F !important;
-        border: 1px solid #A8D5BE !important;
+        background: transparent !important;
+        color: #2B7FD4 !important;
+        border: 1px solid #B0CFF0 !important;
     }
 
     .stButton > button[kind="secondary"]:hover {
-        background-color: #F0F7F4 !important;
+        background: #E3EFFC !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 
     /* ── Inputs ── */
     .stTextInput > div > div > input,
     .stTextArea > div > div > textarea {
         border-radius: 10px !important;
-        border: 1px solid #D4E0DA !important;
+        border: 1px solid #C8DAEA !important;
         background: #FFFFFF !important;
         font-family: 'DM Sans', sans-serif !important;
         font-size: 14px !important;
-        color: #1A2E25 !important;
-        transition: border-color 0.15s ease !important;
+        color: #1A2A6C !important;
     }
 
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
-        border-color: #2D9B6F !important;
-        box-shadow: 0 0 0 3px rgba(45, 155, 111, 0.12) !important;
+        border-color: #2B7FD4 !important;
+        box-shadow: 0 0 0 3px rgba(43, 127, 212, 0.12) !important;
     }
 
     /* ── Selectbox ── */
     .stSelectbox > div > div {
         border-radius: 10px !important;
-        border: 1px solid #D4E0DA !important;
+        border: 1px solid #C8DAEA !important;
         background: #FFFFFF !important;
-        font-family: 'DM Sans', sans-serif !important;
-        font-size: 14px !important;
     }
 
     /* ── File uploader ── */
     [data-testid="stFileUploader"] {
-        border: 2px dashed #A8D5BE !important;
+        border: 2px dashed #8BBFE8 !important;
         border-radius: 14px !important;
-        background: #F7FCF9 !important;
-        padding: 1rem !important;
+        background: #F0F6FC !important;
     }
 
-    /* ── Chat input ── */
+    /* ── Chat ── */
     [data-testid="stChatInput"] textarea {
         border-radius: 14px !important;
-        border: 1px solid #D4E0DA !important;
+        border: 1px solid #C8DAEA !important;
         background: #FFFFFF !important;
-        font-family: 'DM Sans', sans-serif !important;
     }
 
-    /* ── Mensagens do chat ── */
     [data-testid="stChatMessage"] {
         background: #FFFFFF !important;
-        border: 1px solid #E8EDEA !important;
+        border: 1px solid #E0EAF5 !important;
         border-radius: 14px !important;
-        padding: 0.8rem 1rem !important;
-        margin-bottom: 8px !important;
     }
 
     /* ── Divider ── */
-    hr {
-        border-color: #E8EDEA !important;
-        margin: 1.5rem 0 !important;
-    }
-
-    /* ── Notificação de alertas ── */
-    .stAlert {
-        border-radius: 12px !important;
-    }
+    hr { border-color: #E0EAF5 !important; }
 
     /* ── Dataframe ── */
     [data-testid="stDataFrame"] {
         border-radius: 12px !important;
+        border: 1px solid #E0EAF5 !important;
         overflow: hidden !important;
-        border: 1px solid #E8EDEA !important;
     }
 
-    /* ── Esconde elementos padrão do Streamlit ── */
+    /* ── Esconde elementos padrão ── */
     #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    header { visibility: hidden; }
-
-    /* ── Page header customizado ── */
-    .page-header {
-        margin-bottom: 1.5rem;
-    }
-
-    .page-title {
-        font-family: 'DM Serif Display', serif;
-        font-size: 24px;
-        color: #1A2E25;
-        margin: 0;
-        line-height: 1.2;
-    }
-
-    .page-subtitle {
-        font-size: 13px;
-        color: #6B8C7D;
-        margin-top: 4px;
-    }
+    footer     { visibility: hidden; }
+    header     { visibility: hidden; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -434,7 +365,7 @@ def page_header(titulo, subtitulo=None):
     """, unsafe_allow_html=True)
 
 
-def badge(texto, tipo="verde"):
+def badge(texto, tipo="teal"):
     st.markdown(
         f'<span class="badge badge-{tipo}">{texto}</span>',
         unsafe_allow_html=True
@@ -442,13 +373,17 @@ def badge(texto, tipo="verde"):
 
 
 def sidebar_logo():
-    st.sidebar.markdown("""
-    <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">🩺</div>
-        <div>
-            <div class="sidebar-logo-text">MedTrack</div>
-            <div class="sidebar-logo-sub">Health AI</div>
-        </div>
+    logo_b64 = _logo_base64()
+
+    if logo_b64:
+        img_html = f'<img src="data:image/png;base64,{logo_b64}" />'
+    else:
+        img_html = '<div style="font-size:32px;margin-bottom:4px;">🩺</div>'
+
+    st.sidebar.markdown(f"""
+    <div class="sidebar-logo-wrap">
+        {img_html}
+        <div class="sidebar-logo-sub">Health AI</div>
     </div>
     """, unsafe_allow_html=True)
 
