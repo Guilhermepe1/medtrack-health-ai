@@ -1,8 +1,8 @@
-from database.db import conn
-
+from database.db import get_connection
 
 def buscar_usuario_por_username(username):
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -11,11 +11,15 @@ def buscar_usuario_por_username(username):
         WHERE username = ?
     """, (username,))
 
+    conn.commit()
+    conn.close()
+
     return cursor.fetchone()
 
 
 def criar_usuario(nome, username, senha_hash):
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -24,3 +28,4 @@ def criar_usuario(nome, username, senha_hash):
     """, (nome, username, senha_hash))
 
     conn.commit()
+    conn.close()

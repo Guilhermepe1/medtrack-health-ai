@@ -4,7 +4,7 @@ relacionadas à entidade Exame.
 """
 
 import os
-from database.db import conn
+from database.db import get_connection
 from models.exame import Exame
 
 UPLOAD_FOLDER = "uploads"
@@ -15,6 +15,7 @@ def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     Salva um novo exame no banco de dados.
     """
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -26,10 +27,13 @@ def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
     )
 
     conn.commit()
+    conn.close()
+
 
 
 def listar_exames(usuario_id):
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     query = """
@@ -57,11 +61,15 @@ def listar_exames(usuario_id):
 
         exames.append(exame)
 
+    conn.commit()
+    conn.close()
+
     return exames
 
 
 def buscar_exame_por_id(exame_id):
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -93,6 +101,7 @@ def excluir_exame(exame_id):
     Remove um exame do banco e também remove o arquivo do sistema.
     """
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -114,6 +123,7 @@ def excluir_exame(exame_id):
     """, (exame_id,))
 
     conn.commit()
+    conn.close()
 
     caminho = os.path.join(UPLOAD_FOLDER, nome_arquivo)
 
@@ -153,6 +163,7 @@ def buscar_exames_relevantes(usuario_id, pergunta):
     Busca exames relevantes apenas do usuário.
     """
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -186,11 +197,15 @@ def buscar_exames_relevantes(usuario_id, pergunta):
 
             relevantes.append(exame)
 
+    conn.commit()
+    conn.close()
+
     return relevantes
 
 
 def buscar_exame_por_nome(usuario_id, nome):
 
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -213,6 +228,9 @@ def buscar_exame_por_nome(usuario_id, nome):
     )
 
     exame.texto = row[2]
+    
+    conn.commit()
+    conn.close()
 
     return exame
 

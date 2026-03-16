@@ -11,3 +11,4 @@ Pillow
 streamlit-authenticator
 bcrypt
 sentence-transformers
+psycopg2-binary
