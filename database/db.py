@@ -10,7 +10,7 @@ def get_connection():
             database="postgres",
             user="postgres",
             password=st.secrets["DB_PASSWORD"],
-            port=5432,
+            port=6543,
             sslmode="require"
         )
 
