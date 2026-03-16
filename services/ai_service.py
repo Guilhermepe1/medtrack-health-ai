@@ -3,12 +3,16 @@ Service responsável por interagir com o modelo de IA.
 """
 
 import os
+import streamlit as st
 from groq import Groq
-from dotenv import load_dotenv
 
-load_dotenv()
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+def _get_groq_client():
+    api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+    return Groq(api_key=api_key)
+
+
+client = _get_groq_client()
 
 
 def resumir_exame(texto):

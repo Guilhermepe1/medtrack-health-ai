@@ -11,12 +11,36 @@ def render_chat():
 
     st.subheader("Chat de Saúde")
 
-    pergunta = st.text_input("Pergunte algo sobre sua saúde")
+    # inicializa histórico na sessão
+    if "historico_chat" not in st.session_state:
+        st.session_state.historico_chat = []
+
+    # exibe histórico de mensagens
+    for mensagem in st.session_state.historico_chat:
+        with st.chat_message(mensagem["role"]):
+            st.write(mensagem["content"])
+
+    # input do usuário
+    pergunta = st.chat_input("Pergunte algo sobre sua saúde...")
 
     if pergunta:
 
-        resposta = perguntar_saude(pergunta)
+        # exibe e salva pergunta do usuário
+        with st.chat_message("user"):
+            st.write(pergunta)
 
-        st.write("Resposta da IA:")
+        st.session_state.historico_chat.append({
+            "role": "user",
+            "content": pergunta
+        })
 
-        st.write(resposta)
+        # busca resposta da IA
+        with st.chat_message("assistant"):
+            with st.spinner("Consultando seus exames..."):
+                resposta = perguntar_saude(pergunta)
+            st.write(resposta)
+
+        st.session_state.historico_chat.append({
+            "role": "assistant",
+            "content": resposta
+        })

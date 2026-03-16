@@ -8,4 +8,5 @@ __pycache__/
 database/
 uploads/
 rag/*.index
+*reindexar_exames.py
 
