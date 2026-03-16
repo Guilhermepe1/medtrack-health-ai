@@ -4,12 +4,13 @@ import streamlit as st
 
 def get_connection():
 
-    try:
-        conn = psycopg2.connect(
-            st.secrets["DATABASE_URL"]
-        )
-        return conn
+    conn = psycopg2.connect(
+        host="aws-0-us-east-1.pooler.supabase.com",
+        database="postgres",
+        user="postgres.uhlzssxjspylffpriaqt",
+        password=st.secrets["DB_PASSWORD"],
+        port=5432,
+        sslmode="require"
+    )
 
-    except Exception as e:
-        st.error(f"Erro ao conectar no banco: {e}")
-        raise e
+    return conn
