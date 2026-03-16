@@ -43,6 +43,6 @@ def processar_exame(arquivo, usuario_id):
     
     exame = buscar_exame_por_nome(usuario_id, arquivo.name)
 
-    adicionar_exame(usuario_id, exame.id, resumo)
+    adicionar_exame(usuario_id, resumo)
 
     return caminho, texto, resumo, categoria
