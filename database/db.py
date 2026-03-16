@@ -5,7 +5,7 @@ import streamlit as st
 def get_connection():
 
     conn = psycopg2.connect(
-        host="aws-0-us-east-1.pooler.supabase.com",
+        host="aws-1-sa-east-1.pooler.supabase.com",
         database="postgres",
         user="postgres.uhlzssxjspylffpriaqt",
         password=st.secrets["DB_PASSWORD"],
