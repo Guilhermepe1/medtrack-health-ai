@@ -41,7 +41,7 @@ def processar_exame(arquivo, usuario_id):
 
     salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria)
     
-    exame = buscar_exame_por_nome(arquivo.name)
+    exame = buscar_exame_por_nome(usuario_id, arquivo.name)
 
     adicionar_exame(exame.id, resumo)
 
