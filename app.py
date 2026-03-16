@@ -1,69 +1,110 @@
 """
-Aplicação principal do Minha Saúde AI
-Responsável apenas por montar a interface.
+Aplicação principal do MedTrack Health AI.
 """
 
 import streamlit as st
+from datetime import datetime
 
 from auth.login_ui import render_login
 from ui.upload_ui import render_upload
 from ui.timeline_ui import render_timeline
 from ui.chat_ui import render_chat
 from ui.valores_ui import render_valores
-from ui.alertas_ui import render_alertas, render_badge_alertas
+from ui.alertas_ui import render_alertas
+from repositories.alertas_repository import buscar_alertas_nao_lidos
+from theme import aplicar_tema, sidebar_logo, sidebar_usuario, page_header
 
-
-# deve ser a primeira chamada Streamlit do script
 st.set_page_config(
-    page_title="Minha Saúde AI",
+    page_title="MedTrack Health AI",
     page_icon="🩺",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 
+def get_saudacao():
+    hora = datetime.now().hour
+    if hora < 12:
+        return "Bom dia"
+    elif hora < 18:
+        return "Boa tarde"
+    return "Boa noite"
+
+
+def render_sidebar():
+    sidebar_logo()
+    sidebar_usuario(st.session_state["usuario_nome"])
+
+    nao_lidos = buscar_alertas_nao_lidos(st.session_state["usuario_id"])
+    alerta_badge = f" 🔴 {len(nao_lidos)}" if nao_lidos else ""
+
+    paginas = {
+        "upload":   ("📤", "Enviar Exame"),
+        "timeline": ("🗂️", "Meus Exames"),
+        "valores":  ("📊", "Valores Laboratoriais"),
+        "alertas":  ("⚠️", f"Alertas{alerta_badge}"),
+        "chat":     ("💬", "Chat de Saúde"),
+    }
+
+    if "pagina" not in st.session_state:
+        st.session_state["pagina"] = "upload"
+
+    st.sidebar.markdown("### Menu")
+
+    for key, (icone, label) in paginas.items():
+        ativo = st.session_state["pagina"] == key
+        if st.sidebar.button(
+            f"{icone}  {label}",
+            key=f"nav_{key}",
+            use_container_width=True,
+            type="primary" if ativo else "secondary"
+        ):
+            st.session_state["pagina"] = key
+            st.rerun()
+
+    st.sidebar.divider()
+
+    if st.sidebar.button("🚪  Sair", use_container_width=True, type="secondary"):
+        st.session_state.clear()
+        st.rerun()
+
+
 def main():
+
+    aplicar_tema()
 
     if "logado" not in st.session_state:
         render_login()
         return
 
-    st.sidebar.write(f"Usuário: {st.session_state['usuario_nome']}")
+    render_sidebar()
 
-    if st.sidebar.button("Logout"):
-        st.session_state.clear()
-        st.rerun()
+    pagina = st.session_state.get("pagina", "upload")
+    nome = st.session_state["usuario_nome"]
+    saudacao = get_saudacao()
 
-    st.title("🩺 Minha Saúde AI")
+    if pagina == "upload":
+        page_header(
+            f"{saudacao}, {nome} 👋",
+            "Envie um novo exame para análise automática"
+        )
+        render_upload()
 
-    st.markdown(
-        """
-        Faça upload de seus exames médicos, acompanhe seu histórico
-        e tire dúvidas sobre sua saúde com ajuda de IA.
-        """
-    )
+    elif pagina == "timeline":
+        page_header("Meus Exames", "Histórico completo dos seus exames")
+        render_timeline()
 
-    # badge de alertas não lidos — visível em todas as telas
-    render_badge_alertas()
+    elif pagina == "valores":
+        page_header("Valores Laboratoriais", "Acompanhe a evolução dos seus indicadores")
+        render_valores()
 
-    st.divider()
+    elif pagina == "alertas":
+        page_header("Alertas Clínicos", "Valores que merecem atenção")
+        render_alertas()
 
-    render_upload()
-
-    st.divider()
-
-    render_timeline()
-
-    st.divider()
-
-    render_valores()
-
-    st.divider()
-
-    render_alertas()
-
-    st.divider()
-
-    render_chat()
+    elif pagina == "chat":
+        page_header("Chat de Saúde", "Tire dúvidas sobre seus exames com IA")
+        render_chat()
 
 
 if __name__ == "__main__":
