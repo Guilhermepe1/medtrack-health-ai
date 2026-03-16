@@ -5,9 +5,8 @@ Service responsável pelo fluxo de processamento de exames.
 import os
 
 from services.ai_service import resumir_exame
-from repositories.exame_repository import salvar_exame
-from rag.vector_store import adicionar_exame
 from repositories.exame_repository import salvar_exame, buscar_exame_por_nome
+from rag.vector_store import adicionar_exame
 from services.document_reader import extrair_texto_documento
 from services.exame_classifier import classificar_exame
 
@@ -23,6 +22,7 @@ def processar_exame(arquivo, usuario_id):
     2. Extrai texto (OCR)
     3. Gera resumo com IA
     4. Salva no banco
+    5. Indexa embedding no pgvector
     """
 
     if not os.path.exists(UPLOAD_FOLDER):
@@ -40,9 +40,10 @@ def processar_exame(arquivo, usuario_id):
     categoria = classificar_exame(texto)
 
     salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria)
-    
+
     exame = buscar_exame_por_nome(usuario_id, arquivo.name)
 
-    adicionar_exame(usuario_id, resumo)
+    if exame:
+        adicionar_exame(usuario_id, exame.id, texto)
 
     return caminho, texto, resumo, categoria

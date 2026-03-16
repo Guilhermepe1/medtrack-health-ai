@@ -1,66 +1,40 @@
-import os
-import faiss
 import numpy as np
-
+from database.db import get_connection, get_cursor
 from services.embedding_service import gerar_embedding
 
-RAG_FOLDER = "rag"
 
-# dimensão do embedding (ajuste conforme seu modelo)
-DIMENSION = 384
-
-
-def _get_index_path(usuario_id):
-    """
-    Retorna o caminho do índice do usuário.
-    """
-    return os.path.join(RAG_FOLDER, f"user_{usuario_id}.index")
-
-
-def carregar_index(usuario_id):
-    """
-    Carrega o índice FAISS do usuário ou cria um novo.
-    """
-
-    caminho = _get_index_path(usuario_id)
-
-    if os.path.exists(caminho):
-        return faiss.read_index(caminho)
-
-    return faiss.IndexFlatL2(DIMENSION)
-
-
-def salvar_index(usuario_id, index):
-
-    caminho = _get_index_path(usuario_id)
-
-    faiss.write_index(index, caminho)
-
-
-def adicionar_exame(usuario_id, texto):
-
-    index = carregar_index(usuario_id)
-
+def adicionar_exame(usuario_id, exame_id, texto):
     embedding = gerar_embedding(texto)
+    vetor = embedding.tolist()
 
-    vetor = np.array([embedding]).astype("float32")
+    conn = get_connection()
+    cursor = get_cursor(conn)
 
-    index.add(vetor)
+    cursor.execute("""
+        INSERT INTO exame_embeddings (exame_id, usuario_id, embedding)
+        VALUES (%s, %s, %s)
+    """, (exame_id, usuario_id, vetor))
 
-    salvar_index(usuario_id, index)
+    conn.commit()
+    conn.close()
 
 
 def buscar_exames_semelhantes(usuario_id, pergunta, k=3):
-
-    index = carregar_index(usuario_id)
-
-    if index.ntotal == 0:
-        return []
-
     embedding = gerar_embedding(pergunta)
+    vetor = embedding.tolist()
 
-    vetor = np.array([embedding]).astype("float32")
+    conn = get_connection()
+    cursor = get_cursor(conn)
 
-    distancias, indices = index.search(vetor, k)
+    cursor.execute("""
+        SELECT exame_id
+        FROM exame_embeddings
+        WHERE usuario_id = %s
+        ORDER BY embedding <-> %s::vector
+        LIMIT %s
+    """, (usuario_id, vetor, k))
 
-    return indices[0]
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [row["exame_id"] for row in rows]
