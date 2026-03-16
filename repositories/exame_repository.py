@@ -10,22 +10,17 @@ from models.exame import Exame
 UPLOAD_FOLDER = "uploads"
 
 
-def salvar_exame(usuario_id, arquivo, texto, resumo, categoria):
-    """
-    Salva um novo exame no banco de dados.
-    """
-
+def salvar_exame(usuario_id, arquivo, texto, resumo, categoria, storage_path=None):
     conn = get_connection()
     cursor = get_cursor(conn)
 
     cursor.execute(
         """
-        INSERT INTO exames (usuario_id, arquivo, texto, resumo, categoria)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO exames (usuario_id, arquivo, texto, resumo, categoria, storage_path)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """,
-        (usuario_id, arquivo, texto, resumo, categoria)
+        (usuario_id, arquivo, texto, resumo, categoria, storage_path)
     )
-
     conn.commit()
     conn.close()
 

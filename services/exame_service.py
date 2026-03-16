@@ -2,10 +2,11 @@
 Service responsável pelo fluxo de processamento de exames.
 """
 
-import os
+import streamlit as st
 
 from services.ai_service import resumir_exame
 from services.extracao_service import extrair_valores
+from services.storage_service import upload_arquivo
 from repositories.exame_repository import salvar_exame, buscar_exame_por_nome
 from repositories.valores_repository import salvar_valores
 from rag.vector_store import adicionar_exame
@@ -13,40 +14,39 @@ from services.document_reader import extrair_texto_documento
 from services.exame_classifier import classificar_exame
 
 
-UPLOAD_FOLDER = "uploads"
-
-
 def processar_exame(arquivo, usuario_id):
     """
     Fluxo completo de processamento de um exame:
 
-    1. Salva arquivo
+    1. Lê conteúdo do arquivo
     2. Extrai texto (OCR)
     3. Gera resumo com IA
     4. Classifica categoria
-    5. Salva no banco
-    6. Extrai valores estruturados
-    7. Indexa embedding no pgvector
+    5. Faz upload para Supabase Storage
+    6. Salva metadados no banco
+    7. Extrai valores estruturados
+    8. Indexa embedding no pgvector
     """
 
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
-
-    caminho = os.path.join(UPLOAD_FOLDER, arquivo.name)
-
-    with open(caminho, "wb") as f:
-        f.write(arquivo.read())
+    conteudo = arquivo.read()
 
     texto = extrair_texto_documento(arquivo)
     resumo = resumir_exame(texto)
     categoria = classificar_exame(texto)
 
-    salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria)
+    # upload para Supabase Storage
+    storage_path = upload_arquivo(usuario_id, arquivo.name, conteudo)
+
+    if not storage_path:
+        st.error("Erro ao salvar arquivo no storage. Tente novamente.")
+        return None, texto, resumo, categoria
+
+    # salva metadados no banco com storage_path
+    salvar_exame(usuario_id, arquivo.name, texto, resumo, categoria, storage_path)
 
     exame = buscar_exame_por_nome(usuario_id, arquivo.name)
 
     if exame:
-        # extrai e salva valores estruturados
         resultado = extrair_valores(texto)
         salvar_valores(
             exame_id=exame.id,
@@ -54,8 +54,6 @@ def processar_exame(arquivo, usuario_id):
             data_coleta=resultado.get("data_coleta"),
             valores=resultado.get("valores", [])
         )
-
-        # indexa no pgvector
         adicionar_exame(usuario_id, exame.id, texto)
 
-    return caminho, texto, resumo, categoria
+    return storage_path, texto, resumo, categoria
