@@ -1,31 +1,35 @@
 from database.db import get_connection
 
+
 def buscar_usuario_por_username(username):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
-        SELECT id, nome, username, senha
-        FROM usuarios
-        WHERE username = ?
-    """, (username,))
+    cursor.execute(
+        "SELECT id, username, senha FROM usuarios WHERE username = %s",
+        (username,)
+    )
 
-    conn.commit()
+    usuario = cursor.fetchone()
+
     conn.close()
 
-    return cursor.fetchone()
+    return usuario
 
 
-def criar_usuario(nome, username, senha_hash):
+def criar_usuario(nome, username, senha):
 
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO usuarios (nome, username, senha)
-        VALUES (?, ?, ?)
-    """, (nome, username, senha_hash))
+        VALUES (%s, %s, %s)
+        """,
+        (nome, username, senha)
+    )
 
     conn.commit()
     conn.close()
