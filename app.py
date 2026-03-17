@@ -11,8 +11,9 @@ from ui.timeline_ui import render_timeline
 from ui.chat_ui import render_chat
 from ui.valores_ui import render_valores
 from ui.alertas_ui import render_alertas
+from ui.perfil_ui import render_avatar_sidebar, render_modal_perfil
 from repositories.alertas_repository import buscar_alertas_nao_lidos
-from theme import aplicar_tema, sidebar_logo, sidebar_usuario, page_header
+from theme import aplicar_tema, sidebar_logo, page_header
 
 st.set_page_config(
     page_title="MedTrack Health AI",
@@ -33,9 +34,11 @@ def get_saudacao():
 
 def render_sidebar():
     sidebar_logo()
-    sidebar_usuario(st.session_state["usuario_nome"])
 
-    nao_lidos = buscar_alertas_nao_lidos(st.session_state["usuario_id"])
+    # avatar com botão de perfil
+    render_avatar_sidebar(st.session_state["usuario_nome"])
+
+    nao_lidos    = buscar_alertas_nao_lidos(st.session_state["usuario_id"])
     alerta_badge = f" 🔴 {len(nao_lidos)}" if nao_lidos else ""
 
     paginas = {
@@ -49,7 +52,10 @@ def render_sidebar():
     if "pagina" not in st.session_state:
         st.session_state["pagina"] = "upload"
 
-    st.sidebar.markdown("### Menu")
+    st.sidebar.markdown(
+        '<div class="nav-label">Menu</div>',
+        unsafe_allow_html=True
+    )
 
     for key, (icone, label) in paginas.items():
         ativo = st.session_state["pagina"] == key
@@ -60,6 +66,7 @@ def render_sidebar():
             type="primary" if ativo else "secondary"
         ):
             st.session_state["pagina"] = key
+            st.session_state["modal_perfil"] = False
             st.rerun()
 
     st.sidebar.divider()
@@ -79,8 +86,13 @@ def main():
 
     render_sidebar()
 
-    pagina = st.session_state.get("pagina", "upload")
-    nome = st.session_state["usuario_nome"]
+    # modal de perfil — renderiza por cima do conteúdo atual
+    if st.session_state.get("modal_perfil"):
+        render_modal_perfil()
+        return
+
+    pagina   = st.session_state.get("pagina", "upload")
+    nome     = st.session_state["usuario_nome"]
     saudacao = get_saudacao()
 
     if pagina == "upload":
