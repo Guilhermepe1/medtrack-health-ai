@@ -48,100 +48,124 @@ def _cor_dente(numero, odontograma):
 
 
 def render_odontograma(usuario_id, odontograma):
-    """Renderiza o odontograma SVG interativo."""
+    """Renderiza o odontograma HTML interativo com dados completos no JS."""
 
-    # monta dados para o SVG
-    def dente_info(numero):
-        dado = odontograma.get(numero, {})
-        status = dado.get("status", "saudavel")
-        cfg    = STATUS_CONFIG.get(status, STATUS_CONFIG["saudavel"])
-        obs    = dado.get("observacao") or cfg["label"]
-        return cfg["cor"], cfg["emoji"], obs
+    import json as _json
 
-    # gera SVG do odontograma
-    svg_superior = ""
-    svg_inferior = ""
-    w = 36
-    gap = 4
-    total = len(DENTES_SUPERIOR)
+    w       = 36
+    gap     = 4
     start_x = 20
+    total   = len(DENTES_SUPERIOR)
+    svg_w   = start_x * 2 + total * (w + gap)
 
-    for i, num in enumerate(DENTES_SUPERIOR):
-        x = start_x + i * (w + gap)
-        cor, emoji, obs = dente_info(num)
-        svg_superior += f"""
-        <g class="dente" onclick="selecionarDente({num}, '{STATUS_CONFIG.get(odontograma.get(num, {}).get('status','saudavel'), STATUS_CONFIG['saudavel'])['label']}')">
-          <rect x="{x}" y="10" width="{w}" height="{w}" rx="6"
-                fill="{cor}" fill-opacity="0.18" stroke="{cor}" stroke-width="1.5"/>
-          <text x="{x + w//2}" y="32" text-anchor="middle"
-                font-size="11" fill="{cor}" font-weight="600">{num}</text>
-        </g>"""
+    def build_dente(num, y_offset):
+        dado   = odontograma.get(num, {})
+        status = dado.get("status") or "saudavel"
+        if status not in STATUS_CONFIG:
+            status = "saudavel"
+        cfg = STATUS_CONFIG[status]
+        cor = cfg["cor"]
+        i   = (DENTES_SUPERIOR + DENTES_INFERIOR).index(num)
+        i   = i if num in DENTES_SUPERIOR else i - len(DENTES_SUPERIOR)
+        x   = start_x + i * (w + gap)
+        return (
+            f'<g class="dente" data-num="{num}" onclick="selDente(this)">' +
+            f'<rect x="{x}" y="{y_offset}" width="{w}" height="{w}" rx="6" ' +
+            f'fill="{cor}" fill-opacity="0.18" stroke="{cor}" stroke-width="2"/>' +
+            f'<text x="{x + w//2}" y="{y_offset + w//2 + 4}" text-anchor="middle" ' +
+            f'font-size="11" fill="{cor}" font-weight="700">{num}</text></g>'
+        )
 
-    for i, num in enumerate(DENTES_INFERIOR):
-        x = start_x + i * (w + gap)
-        cor, emoji, obs = dente_info(num)
-        svg_inferior += f"""
-        <g class="dente" onclick="selecionarDente({num}, '{STATUS_CONFIG.get(odontograma.get(num, {}).get('status','saudavel'), STATUS_CONFIG['saudavel'])['label']}')">
-          <rect x="{x}" y="10" width="{w}" height="{w}" rx="6"
-                fill="{cor}" fill-opacity="0.18" stroke="{cor}" stroke-width="1.5"/>
-          <text x="{x + w//2}" y="32" text-anchor="middle"
-                font-size="11" fill="{cor}" font-weight="600">{num}</text>
-        </g>"""
+    sup_svg = "".join(build_dente(n, 14) for n in DENTES_SUPERIOR)
+    inf_svg = "".join(build_dente(n, 14) for n in DENTES_INFERIOR)
 
-    svg_width = start_x * 2 + total * (w + gap)
+    # serializa dados do odontograma para o JS — chave é string do número
+    dados_js = {}
+    for num in DENTES_SUPERIOR + DENTES_INFERIOR:
+        dado   = odontograma.get(num, {})
+        status = dado.get("status") or "saudavel"
+        if status not in STATUS_CONFIG:
+            status = "saudavel"
+        cfg = STATUS_CONFIG[status]
+        dados_js[str(num)] = {
+            "status":    status,
+            "label":     cfg["label"],
+            "cor":       cfg["cor"],
+            "obs":       dado.get("observacao") or ""
+        }
+
+    dados_json = _json.dumps(dados_js, ensure_ascii=False)
 
     st.components.v1.html(f"""
     <style>
-      body {{ margin:0; font-family: 'DM Sans', sans-serif; background: transparent; }}
-      .dente {{ cursor: pointer; transition: opacity 0.15s; }}
-      .dente:hover {{ opacity: 0.75; }}
-      .label {{ font-size:12px; fill:#6B8CB0; font-weight:500; }}
-      #info-box {{
-        margin-top: 12px;
-        padding: 10px 14px;
-        background: #F0F6FC;
-        border-radius: 10px;
-        border: 1px solid #C8DAEA;
+      * {{ box-sizing: border-box; margin:0; padding:0; }}
+      body {{ font-family: Arial, sans-serif; background: transparent; }}
+      .dente {{ cursor: pointer; }}
+      .dente rect {{ transition: filter 0.15s; }}
+      .dente:hover rect {{ filter: brightness(0.85); }}
+      .dente.ativo rect {{ stroke-width: 3 !important; filter: brightness(0.8); }}
+      #info {{
+        margin-top: 14px;
+        padding: 12px 16px;
+        background: #EEF5FC;
+        border-left: 4px solid #2B7FD4;
+        border-radius: 8px;
         font-size: 13px;
         color: #1A2A6C;
         display: none;
+        line-height: 1.6;
       }}
+      #info .titulo {{ font-weight: 700; font-size: 14px; margin-bottom: 4px; }}
+      #info .obs {{ color: #4A6B8C; font-size: 12px; margin-top: 4px; }}
     </style>
 
-    <svg width="100%" viewBox="0 0 {svg_width} 100"
-         xmlns="http://www.w3.org/2000/svg">
-
-      <!-- Label superior -->
-      <text x="{svg_width//2}" y="8" text-anchor="middle" class="label">
-        Superior
-      </text>
-      {svg_superior}
-
-      <!-- Label inferior -->
-      <text x="{svg_width//2}" y="95" text-anchor="middle" class="label">
-        Inferior
-      </text>
+    <svg width="100%" viewBox="0 0 {svg_w} 60" xmlns="http://www.w3.org/2000/svg">
+      <text x="{svg_w//2}" y="10" text-anchor="middle"
+            font-size="11" fill="#6B8CB0" font-weight="600">SUPERIOR</text>
+      {sup_svg}
     </svg>
 
-    <!-- Linha inferior separada -->
-    <svg width="100%" viewBox="0 0 {svg_width} 60"
-         xmlns="http://www.w3.org/2000/svg">
-      {svg_inferior}
+    <svg width="100%" viewBox="0 0 {svg_w} 60" xmlns="http://www.w3.org/2000/svg"
+         style="margin-top:6px">
+      {inf_svg}
+      <text x="{svg_w//2}" y="58" text-anchor="middle"
+            font-size="11" fill="#6B8CB0" font-weight="600">INFERIOR</text>
     </svg>
 
-    <div id="info-box">
-      Dente <strong id="dente-num">—</strong>:
-      <span id="dente-status">—</span>
+    <div id="info">
+      <div class="titulo" id="info-titulo"></div>
+      <div id="info-status"></div>
+      <div class="obs" id="info-obs"></div>
     </div>
 
     <script>
-    function selecionarDente(num, status) {{
-      document.getElementById('info-box').style.display = 'block';
-      document.getElementById('dente-num').textContent = num;
-      document.getElementById('dente-status').textContent = status;
+    const DADOS = {dados_json};
+    let ativo = null;
+
+    function selDente(el) {{
+      if (ativo) ativo.classList.remove("ativo");
+      el.classList.add("ativo");
+      ativo = el;
+
+      const num   = el.getAttribute("data-num");
+      const d     = DADOS[num] || {{}};
+      const label = d.label  || "Saudável";
+      const cor   = d.cor    || "#00C9A7";
+      const obs   = d.obs    || "";
+
+      const box = document.getElementById("info");
+      box.style.display      = "block";
+      box.style.borderColor  = cor;
+
+      document.getElementById("info-titulo").textContent =
+        "Dente " + num + " — " + label;
+      document.getElementById("info-titulo").style.color = cor;
+      document.getElementById("info-status").textContent =
+        obs ? "" : "Nenhuma observação registrada.";
+      document.getElementById("info-obs").textContent = obs;
     }}
     </script>
-    """, height=200)
+    """, height=260)
 
 
 def render_legenda():
