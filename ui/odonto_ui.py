@@ -185,7 +185,9 @@ def render_odonto():
             )
 
         with col2:
-            status_atual = odontograma.get(dente_sel, {}).get("status", "saudavel")
+            status_atual = odontograma.get(dente_sel, {}).get("status") or "saudavel"
+            if status_atual not in STATUS_CONFIG:
+                status_atual = "saudavel"
             novo_status = st.selectbox(
                 "Status",
                 list(STATUS_CONFIG.keys()),
