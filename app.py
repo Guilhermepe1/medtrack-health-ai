@@ -6,6 +6,7 @@ import streamlit as st
 from datetime import datetime
 
 from auth.login_ui import render_login
+from ui.dashboard_ui import render_dashboard
 from ui.upload_ui import render_upload
 from ui.timeline_ui import render_timeline
 from ui.chat_ui import render_chat
@@ -43,7 +44,7 @@ def render_sidebar():
     alerta_badge = f" 🔴 {len(nao_lidos)}" if nao_lidos else ""
 
     if "pagina" not in st.session_state:
-        st.session_state["pagina"] = "upload"
+        st.session_state["pagina"] = "dashboard"
 
     st.sidebar.markdown(
         '<div class="nav-label">Saúde Geral</div>',
@@ -51,11 +52,12 @@ def render_sidebar():
     )
 
     paginas_geral = {
-        "upload":   ("📤", "Enviar Exame"),
-        "timeline": ("🗂️", "Meus Exames"),
-        "valores":  ("📊", "Valores Laboratoriais"),
-        "alertas":  ("⚠️", f"Alertas{alerta_badge}"),
-        "chat":     ("💬", "Chat de Saúde"),
+        "dashboard": ("🏠", "Início"),
+        "upload":    ("📤", "Enviar Exame"),
+        "timeline":  ("🗂️", "Meus Exames"),
+        "valores":   ("📊", "Valores Laboratoriais"),
+        "alertas":   ("⚠️", f"Alertas{alerta_badge}"),
+        "chat":      ("💬", "Chat de Saúde"),
     }
 
     for key, (icone, label) in paginas_geral.items():
@@ -122,7 +124,6 @@ def main():
         render_login()
         return
 
-    # bloqueia acesso até aceitar o termo
     if not render_termo_consentimento():
         return
 
@@ -132,13 +133,19 @@ def main():
         render_modal_perfil()
         return
 
-    pagina   = st.session_state.get("pagina", "upload")
+    pagina   = st.session_state.get("pagina", "dashboard")
     nome     = st.session_state["usuario_nome"]
     saudacao = get_saudacao()
 
-    if pagina == "upload":
-        page_header(f"{saudacao}, {nome} 👋",
-                    "Envie um novo exame para análise automática")
+    if pagina == "dashboard":
+        page_header(
+            f"{saudacao}, {nome} 👋",
+            "Aqui está um resumo da sua saúde hoje"
+        )
+        render_dashboard()
+
+    elif pagina == "upload":
+        page_header("Enviar Exame", "Envie um novo exame para análise automática")
         render_upload()
 
     elif pagina == "timeline":
@@ -165,8 +172,7 @@ def main():
         render_odonto()
 
     elif pagina == "privacidade":
-        page_header("Privacidade e LGPD",
-                    "Seus dados, seus direitos")
+        page_header("Privacidade e LGPD", "Seus dados, seus direitos")
         render_painel_privacidade()
 
 
