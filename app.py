@@ -12,6 +12,7 @@ from ui.chat_ui import render_chat
 from ui.valores_ui import render_valores
 from ui.alertas_ui import render_alertas
 from ui.perfil_ui import render_avatar_sidebar, render_modal_perfil
+from ui.odonto_ui import render_odonto
 from repositories.alertas_repository import buscar_alertas_nao_lidos
 from theme import aplicar_tema, sidebar_logo, page_header
 
@@ -34,14 +35,20 @@ def get_saudacao():
 
 def render_sidebar():
     sidebar_logo()
-
-    # avatar com botão de perfil
     render_avatar_sidebar(st.session_state["usuario_nome"])
 
     nao_lidos    = buscar_alertas_nao_lidos(st.session_state["usuario_id"])
     alerta_badge = f" 🔴 {len(nao_lidos)}" if nao_lidos else ""
 
-    paginas = {
+    if "pagina" not in st.session_state:
+        st.session_state["pagina"] = "upload"
+
+    st.sidebar.markdown(
+        '<div class="nav-label">Saúde Geral</div>',
+        unsafe_allow_html=True
+    )
+
+    paginas_geral = {
         "upload":   ("📤", "Enviar Exame"),
         "timeline": ("🗂️", "Meus Exames"),
         "valores":  ("📊", "Valores Laboratoriais"),
@@ -49,15 +56,7 @@ def render_sidebar():
         "chat":     ("💬", "Chat de Saúde"),
     }
 
-    if "pagina" not in st.session_state:
-        st.session_state["pagina"] = "upload"
-
-    st.sidebar.markdown(
-        '<div class="nav-label">Menu</div>',
-        unsafe_allow_html=True
-    )
-
-    for key, (icone, label) in paginas.items():
+    for key, (icone, label) in paginas_geral.items():
         ativo = st.session_state["pagina"] == key
         if st.sidebar.button(
             f"{icone}  {label}",
@@ -68,6 +67,22 @@ def render_sidebar():
             st.session_state["pagina"] = key
             st.session_state["modal_perfil"] = False
             st.rerun()
+
+    st.sidebar.markdown(
+        '<div class="nav-label" style="margin-top:12px">Saúde Bucal</div>',
+        unsafe_allow_html=True
+    )
+
+    ativo_odonto = st.session_state["pagina"] == "odonto"
+    if st.sidebar.button(
+        "🦷  Odontológico",
+        key="nav_odonto",
+        use_container_width=True,
+        type="primary" if ativo_odonto else "secondary"
+    ):
+        st.session_state["pagina"] = "odonto"
+        st.session_state["modal_perfil"] = False
+        st.rerun()
 
     st.sidebar.divider()
 
@@ -86,7 +101,6 @@ def main():
 
     render_sidebar()
 
-    # modal de perfil — renderiza por cima do conteúdo atual
     if st.session_state.get("modal_perfil"):
         render_modal_perfil()
         return
@@ -96,10 +110,8 @@ def main():
     saudacao = get_saudacao()
 
     if pagina == "upload":
-        page_header(
-            f"{saudacao}, {nome} 👋",
-            "Envie um novo exame para análise automática"
-        )
+        page_header(f"{saudacao}, {nome} 👋",
+                    "Envie um novo exame para análise automática")
         render_upload()
 
     elif pagina == "timeline":
@@ -107,7 +119,8 @@ def main():
         render_timeline()
 
     elif pagina == "valores":
-        page_header("Valores Laboratoriais", "Acompanhe a evolução dos seus indicadores")
+        page_header("Valores Laboratoriais",
+                    "Acompanhe a evolução dos seus indicadores")
         render_valores()
 
     elif pagina == "alertas":
@@ -115,8 +128,14 @@ def main():
         render_alertas()
 
     elif pagina == "chat":
-        page_header("Chat de Saúde", "Tire dúvidas sobre seus exames com IA")
+        page_header("Chat de Saúde",
+                    "Tire dúvidas sobre seus exames com IA")
         render_chat()
+
+    elif pagina == "odonto":
+        page_header("Saúde Bucal",
+                    "Odontograma, radiografias e histórico odontológico")
+        render_odonto()
 
 
 if __name__ == "__main__":
