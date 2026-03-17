@@ -10,4 +10,5 @@ uploads/
 rag/*.index
 *reindexar_exames.py
 *reprocessar_alertas.py
+*reprocessar_odonto.py
 
