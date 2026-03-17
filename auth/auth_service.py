@@ -14,6 +14,7 @@ from auth.google_auth_service import (
     trocar_codigo_por_token,
     buscar_dados_usuario
 )
+from repositories.lgpd_repository import registrar_log
 
 
 def registrar_usuario(nome, username, senha):
@@ -41,7 +42,7 @@ def login(username, senha):
         return False
 
     if not usuario["senha"]:
-        return False  # usuário criado via Google, sem senha
+        return False
 
     if bcrypt.checkpw(senha.encode(), usuario["senha"].encode()):
 
@@ -49,29 +50,23 @@ def login(username, senha):
         st.session_state["usuario_nome"] = usuario["nome"]
         st.session_state["logado"]       = True
 
+        registrar_log(usuario["id"], "login", "Login via usuário e senha")
+
         return True
 
     return False
 
 
 def iniciar_login_google():
-    """
-    Gera e retorna a URL de login do Google.
-    """
     return gerar_url_login()
 
 
 def _gerar_username_do_email(email):
-    """
-    Gera um username único baseado no email.
-    Ex: guilherme@gmail.com → guilherme
-    """
     base = email.split("@")[0]
     base = re.sub(r"[^a-zA-Z0-9_]", "", base)[:20]
 
-    # garante unicidade adicionando sufixo se necessário
-    username = base
-    contador = 1
+    username  = base
+    contador  = 1
 
     while buscar_usuario_por_username(username):
         username = f"{base}{contador}"
@@ -81,10 +76,6 @@ def _gerar_username_do_email(email):
 
 
 def finalizar_login_google(code):
-    """
-    Finaliza o fluxo OAuth: troca o código pelo token,
-    busca os dados do usuário e cria/loga na sessão.
-    """
     try:
         token = trocar_codigo_por_token(code)
         dados = buscar_dados_usuario(token)
@@ -94,17 +85,16 @@ def finalizar_login_google(code):
         nome       = dados.get("name") or email.split("@")[0]
         avatar_url = dados.get("picture")
 
-        # busca por google_id primeiro
         usuario = buscar_usuario_por_google_id(google_id)
 
-        # tenta por email se ainda não vinculado
         if not usuario:
             usuario = buscar_usuario_por_email(email)
 
         if not usuario:
-            # primeiro acesso — cria usuário automaticamente
             username   = _gerar_username_do_email(email)
-            usuario_id = criar_usuario_google(nome, username, email, google_id, avatar_url)
+            usuario_id = criar_usuario_google(
+                nome, username, email, google_id, avatar_url
+            )
         else:
             usuario_id = usuario["id"]
             nome       = usuario["nome"]
@@ -112,6 +102,8 @@ def finalizar_login_google(code):
         st.session_state["usuario_id"]   = usuario_id
         st.session_state["usuario_nome"] = nome
         st.session_state["logado"]       = True
+
+        registrar_log(usuario_id, "login", "Login via Google OAuth")
 
         return True, None
 
