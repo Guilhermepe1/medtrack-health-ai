@@ -15,6 +15,7 @@ from ui.alertas_ui import render_alertas
 from ui.perfil_ui import render_avatar_sidebar, render_modal_perfil
 from ui.odonto_ui import render_odonto
 from ui.lgpd_ui import render_termo_consentimento, render_painel_privacidade
+from ui.minha_conta_ui import render_minha_conta
 from repositories.alertas_repository import buscar_alertas_nao_lidos
 from repositories.lgpd_repository import registrar_log
 from theme import aplicar_tema, sidebar_logo, page_header
@@ -93,6 +94,17 @@ def render_sidebar():
         unsafe_allow_html=True
     )
 
+    ativo_conta = st.session_state["pagina"] == "minha_conta"
+    if st.sidebar.button(
+        "👤  Minha Conta",
+        key="nav_minha_conta",
+        use_container_width=True,
+        type="primary" if ativo_conta else "secondary"
+    ):
+        st.session_state["pagina"] = "minha_conta"
+        st.session_state["modal_perfil"] = False
+        st.rerun()
+
     ativo_privacidade = st.session_state["pagina"] == "privacidade"
     if st.sidebar.button(
         "🔒  Privacidade e LGPD",
@@ -170,6 +182,10 @@ def main():
         page_header("Saúde Bucal",
                     "Odontograma, radiografias e histórico odontológico")
         render_odonto()
+
+    elif pagina == "minha_conta":
+        page_header("Minha Conta", "Visualize e edite seus dados cadastrais")
+        render_minha_conta()
 
     elif pagina == "privacidade":
         page_header("Privacidade e LGPD", "Seus dados, seus direitos")
