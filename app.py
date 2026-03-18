@@ -17,9 +17,8 @@ from ui.odonto_ui import render_odonto
 from ui.lgpd_ui import render_termo_consentimento, render_painel_privacidade
 from ui.minha_conta_ui import render_minha_conta
 from ui.compartilhar_ui import render_compartilhar
-from repositories.link_medico_repository import buscar_link_valido, registrar_acesso
-from services.relatorio_service import gerar_pdf_medico
-from ui.compartilhar_ui import render_compartilhar
+from repositories.link_medico_repository import buscar_dados_por_token
+from services.relatorio_service import gerar_pdf_relatorio
 from repositories.alertas_repository import buscar_alertas_nao_lidos
 from repositories.lgpd_repository import registrar_log
 from theme import aplicar_tema, sidebar_logo, page_header
@@ -51,6 +50,7 @@ def render_sidebar():
     if "pagina" not in st.session_state:
         st.session_state["pagina"] = "dashboard"
 
+    # ── Saúde Geral ──
     st.sidebar.markdown(
         '<div class="nav-label">Saúde Geral</div>',
         unsafe_allow_html=True
@@ -77,6 +77,7 @@ def render_sidebar():
             st.session_state["modal_perfil"] = False
             st.rerun()
 
+    # ── Saúde Bucal ──
     st.sidebar.markdown(
         '<div class="nav-label" style="margin-top:12px">Saúde Bucal</div>',
         unsafe_allow_html=True
@@ -93,54 +94,29 @@ def render_sidebar():
         st.session_state["modal_perfil"] = False
         st.rerun()
 
+    # ── Conta ──
     st.sidebar.markdown(
         '<div class="nav-label" style="margin-top:12px">Conta</div>',
         unsafe_allow_html=True
     )
 
-    ativo_compartilhar = st.session_state["pagina"] == "compartilhar"
-    if st.sidebar.button(
-        "🩺  Compartilhar com médico",
-        key="nav_compartilhar",
-        use_container_width=True,
-        type="primary" if ativo_compartilhar else "secondary"
-    ):
-        st.session_state["pagina"] = "compartilhar"
-        st.session_state["modal_perfil"] = False
-        st.rerun()
+    paginas_conta = {
+        "compartilhar": ("🩺", "Compartilhar com médico"),
+        "minha_conta":  ("👤", "Minha Conta"),
+        "privacidade":  ("🔒", "Privacidade e LGPD"),
+    }
 
-    ativo_compartilhar = st.session_state["pagina"] == "compartilhar"
-    if st.sidebar.button(
-        "🩺  Compartilhar com médico",
-        key="nav_compartilhar",
-        use_container_width=True,
-        type="primary" if ativo_compartilhar else "secondary"
-    ):
-        st.session_state["pagina"] = "compartilhar"
-        st.session_state["modal_perfil"] = False
-        st.rerun()
-
-    ativo_conta = st.session_state["pagina"] == "minha_conta"
-    if st.sidebar.button(
-        "👤  Minha Conta",
-        key="nav_minha_conta",
-        use_container_width=True,
-        type="primary" if ativo_conta else "secondary"
-    ):
-        st.session_state["pagina"] = "minha_conta"
-        st.session_state["modal_perfil"] = False
-        st.rerun()
-
-    ativo_privacidade = st.session_state["pagina"] == "privacidade"
-    if st.sidebar.button(
-        "🔒  Privacidade e LGPD",
-        key="nav_privacidade",
-        use_container_width=True,
-        type="primary" if ativo_privacidade else "secondary"
-    ):
-        st.session_state["pagina"] = "privacidade"
-        st.session_state["modal_perfil"] = False
-        st.rerun()
+    for key, (icone, label) in paginas_conta.items():
+        ativo = st.session_state["pagina"] == key
+        if st.sidebar.button(
+            f"{icone}  {label}",
+            key=f"nav_{key}",
+            use_container_width=True,
+            type="primary" if ativo else "secondary"
+        ):
+            st.session_state["pagina"] = key
+            st.session_state["modal_perfil"] = False
+            st.rerun()
 
     st.sidebar.divider()
 
@@ -154,34 +130,30 @@ def render_sidebar():
         st.rerun()
 
 
-
 def _render_view_medico(token):
     """Exibe o relatório para o médico via link temporário."""
-    from datetime import datetime
     aplicar_tema()
 
-    link = buscar_link_valido(token)
-    if not link:
+    usuario_id = buscar_dados_por_token(token)
+
+    if not usuario_id:
         st.error("❌ Link inválido ou expirado.")
         st.caption("Peça ao paciente que gere um novo link no MedTrack.")
         return
 
-    registrar_acesso(token)
-
     st.markdown("## 🩺 Relatório de Saúde — MedTrack Health AI")
-    st.caption(
-        f"Acesso somente leitura · "
-        f"Válido até {str(link['expira_em'])[:16]}"
-    )
+    st.caption("Acesso somente leitura · Documento compartilhado pelo paciente")
     st.divider()
-
-    pdf_bytes = gerar_pdf_medico(link["usuario_id"])
-    nome = f"relatorio_medtrack_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
 
     st.info(
         "Este relatório foi compartilhado pelo paciente para esta consulta. "
         "Clique abaixo para baixar o PDF completo."
     )
+
+    with st.spinner("Gerando PDF..."):
+        pdf_bytes = gerar_pdf_relatorio(usuario_id)
+
+    nome = f"relatorio_medtrack_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
 
     st.download_button(
         label="⬇️ Baixar relatório PDF",
@@ -201,10 +173,10 @@ def main():
 
     aplicar_tema()
 
-    # intercepta link de médico na URL
+    # intercepta link de médico na URL (?token=...)
     params = st.query_params
-    if "medico" in params:
-        _render_view_medico(params["medico"])
+    if "token" in params:
+        _render_view_medico(params["token"])
         return
 
     if "logado" not in st.session_state:
@@ -249,8 +221,7 @@ def main():
         render_alertas()
 
     elif pagina == "chat":
-        page_header("Chat de Saúde",
-                    "Tire dúvidas sobre seus exames com IA")
+        page_header("Chat de Saúde", "Tire dúvidas sobre seus exames com IA")
         render_chat()
 
     elif pagina == "odonto":
@@ -261,11 +232,6 @@ def main():
     elif pagina == "compartilhar":
         page_header("Compartilhar com Médico",
                     "Link seguro e relatório PDF para sua consulta")
-        render_compartilhar()
-
-    elif pagina == "compartilhar":
-        page_header("Compartilhar com Médico",
-                    "Link seguro e temporário para sua consulta")
         render_compartilhar()
 
     elif pagina == "minha_conta":
