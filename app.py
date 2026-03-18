@@ -17,7 +17,7 @@ from ui.odonto_ui import render_odonto
 from ui.lgpd_ui import render_termo_consentimento, render_painel_privacidade
 from ui.minha_conta_ui import render_minha_conta
 from ui.compartilhar_ui import render_compartilhar
-from repositories.link_medico_repository import buscar_dados_por_token
+from repositories.link_medico_repository import buscar_link_valido, registrar_acesso
 from services.relatorio_service import gerar_pdf_relatorio
 from repositories.alertas_repository import buscar_alertas_nao_lidos
 from repositories.lgpd_repository import registrar_log
@@ -134,9 +134,9 @@ def _render_view_medico(token):
     """Exibe o relatório para o médico via link temporário."""
     aplicar_tema()
 
-    usuario_id = buscar_dados_por_token(token)
+    link = buscar_link_valido(token)
 
-    if not usuario_id:
+    if not link:
         st.error("❌ Link inválido ou expirado.")
         st.caption("Peça ao paciente que gere um novo link no MedTrack.")
         return
@@ -150,8 +150,10 @@ def _render_view_medico(token):
         "Clique abaixo para baixar o PDF completo."
     )
 
+    registrar_acesso(token)
+
     with st.spinner("Gerando PDF..."):
-        pdf_bytes = gerar_pdf_relatorio(usuario_id)
+        pdf_bytes = gerar_pdf_relatorio(link["usuario_id"])
 
     nome = f"relatorio_medtrack_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
 
