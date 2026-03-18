@@ -12,7 +12,7 @@ from repositories.link_medico_repository import (
     revogar_links,
     listar_links_usuario,
 )
-from services.relatorio_service import gerar_pdf_relatorio
+from services.relatorio_service import gerar_pdf_medico
 
 
 def _tempo_restante(expira_em):
@@ -108,7 +108,7 @@ def render_compartilhar():
     if st.button("📥 Gerar e baixar PDF", use_container_width=True):
         with st.spinner("Gerando relatório..."):
             try:
-                pdf_bytes   = gerar_pdf_relatorio(usuario_id)
+                pdf_bytes   = gerar_pdf_medico(usuario_id)
                 nome_arquivo = (
                     f"relatorio_medtrack_"
                     f"{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
