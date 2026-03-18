@@ -16,6 +16,10 @@ from ui.perfil_ui import render_avatar_sidebar, render_modal_perfil
 from ui.odonto_ui import render_odonto
 from ui.lgpd_ui import render_termo_consentimento, render_painel_privacidade
 from ui.minha_conta_ui import render_minha_conta
+from ui.compartilhar_ui import render_compartilhar
+from repositories.link_medico_repository import buscar_link_valido, registrar_acesso
+from services.relatorio_service import gerar_pdf_medico
+from ui.compartilhar_ui import render_compartilhar
 from repositories.alertas_repository import buscar_alertas_nao_lidos
 from repositories.lgpd_repository import registrar_log
 from theme import aplicar_tema, sidebar_logo, page_header
@@ -94,6 +98,28 @@ def render_sidebar():
         unsafe_allow_html=True
     )
 
+    ativo_compartilhar = st.session_state["pagina"] == "compartilhar"
+    if st.sidebar.button(
+        "🩺  Compartilhar com médico",
+        key="nav_compartilhar",
+        use_container_width=True,
+        type="primary" if ativo_compartilhar else "secondary"
+    ):
+        st.session_state["pagina"] = "compartilhar"
+        st.session_state["modal_perfil"] = False
+        st.rerun()
+
+    ativo_compartilhar = st.session_state["pagina"] == "compartilhar"
+    if st.sidebar.button(
+        "🩺  Compartilhar com médico",
+        key="nav_compartilhar",
+        use_container_width=True,
+        type="primary" if ativo_compartilhar else "secondary"
+    ):
+        st.session_state["pagina"] = "compartilhar"
+        st.session_state["modal_perfil"] = False
+        st.rerun()
+
     ativo_conta = st.session_state["pagina"] == "minha_conta"
     if st.sidebar.button(
         "👤  Minha Conta",
@@ -128,9 +154,58 @@ def render_sidebar():
         st.rerun()
 
 
+
+def _render_view_medico(token):
+    """Exibe o relatório para o médico via link temporário."""
+    from datetime import datetime
+    aplicar_tema()
+
+    link = buscar_link_valido(token)
+    if not link:
+        st.error("❌ Link inválido ou expirado.")
+        st.caption("Peça ao paciente que gere um novo link no MedTrack.")
+        return
+
+    registrar_acesso(token)
+
+    st.markdown("## 🩺 Relatório de Saúde — MedTrack Health AI")
+    st.caption(
+        f"Acesso somente leitura · "
+        f"Válido até {str(link['expira_em'])[:16]}"
+    )
+    st.divider()
+
+    pdf_bytes = gerar_pdf_medico(link["usuario_id"])
+    nome = f"relatorio_medtrack_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+
+    st.info(
+        "Este relatório foi compartilhado pelo paciente para esta consulta. "
+        "Clique abaixo para baixar o PDF completo."
+    )
+
+    st.download_button(
+        label="⬇️ Baixar relatório PDF",
+        data=pdf_bytes,
+        file_name=nome,
+        mime="application/pdf",
+        use_container_width=True,
+    )
+
+    st.caption(
+        "MedTrack Health AI — Documento gerado automaticamente. "
+        "Não substitui avaliação médica profissional."
+    )
+
+
 def main():
 
     aplicar_tema()
+
+    # intercepta link de médico na URL
+    params = st.query_params
+    if "medico" in params:
+        _render_view_medico(params["medico"])
+        return
 
     if "logado" not in st.session_state:
         render_login()
@@ -182,6 +257,16 @@ def main():
         page_header("Saúde Bucal",
                     "Odontograma, radiografias e histórico odontológico")
         render_odonto()
+
+    elif pagina == "compartilhar":
+        page_header("Compartilhar com Médico",
+                    "Link seguro e relatório PDF para sua consulta")
+        render_compartilhar()
+
+    elif pagina == "compartilhar":
+        page_header("Compartilhar com Médico",
+                    "Link seguro e temporário para sua consulta")
+        render_compartilhar()
 
     elif pagina == "minha_conta":
         page_header("Minha Conta", "Visualize e edite seus dados cadastrais")

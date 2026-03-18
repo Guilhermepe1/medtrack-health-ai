@@ -13,3 +13,4 @@ bcrypt
 sentence-transformers
 psycopg2-binary
 authlib
+reportlab
